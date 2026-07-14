@@ -16,8 +16,10 @@
   #table-border {
     background: #0d2e0d;
     border-radius: 10px;
-    padding: 12px;
+    padding: 12px 20px;
     border: 3px solid #c9a84c;
+    max-width: 670px;
+    margin: 0 auto;
   }
   .section-header {
     color: #f0d060;
@@ -395,8 +397,16 @@
     <p class="section-label" style="font-size: 12px; margin-bottom: 8px"></p>
     <p class="section-header">Instructions:</p>
 
-    <p class="section-label">
-      0 = Player vomits on pitch<br />
+    <p
+      class="section-label"
+      style="width: 450px; margin: 0 auto; margin-bottom: 8px"
+    >
+      <strong>This is a casual game for fun. No real money is involved. </strong
+      ><br />
+
+      Drag poker chips from the tray onto the table to place bets. Everyone has
+      7 chips to allocate. Remove chips to reallocate. <br /><br /><br />0 =
+      Player vomits on pitch<br />
       00 = Goalkeeper scores <br />
       Middle tiles: Time for first goal, in 5 minute increments <br />
     </p>
@@ -790,16 +800,7 @@
       }
     }
 
-    function resetBoard() {
-      document.querySelectorAll(".cell").forEach((c) => setCellCount(c, 0));
-      chipsPlaced = 0;
-      document.getElementById("name-input").value = "";
-      rebuildTray();
-      updateStatus();
-    }
-
-    const submitBtn = document.getElementById("submit-btn");
-    submitBtn.addEventListener("click", async () => {
+    document.getElementById("submit-btn").addEventListener("click", () => {
       const name = document.getElementById("name-input").value.trim();
       const status = document.getElementById("status-bar");
       if (!name) {
@@ -816,42 +817,27 @@
       const bets = [];
       document.querySelectorAll(".cell").forEach((c) => {
         const n = getCellCount(c);
-        if (n > 0) {
-          bets.push({
-            group: c.dataset.group,
-            value: c.dataset.val,
-            chips: n,
-          });
-        }
+        if (n > 0) bets.push(`${c.dataset.group}:${c.dataset.val}x${n}`);
       });
 
-      submitBtn.disabled = true;
-      status.textContent = "Submitting your bets…";
-      status.style.color = "#f0d060";
-
-      try {
-        const resp = await fetch("/api/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, bets }),
+      const params = new URLSearchParams({
+        "entry.name": name,
+        "entry.bets": bets.join("|"),
+      });
+      const FORM_URL =
+        "https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse";
+      fetch(FORM_URL + "?" + params.toString(), {
+        method: "POST",
+        mode: "no-cors",
+      })
+        .then(() => {
+          status.textContent = `Submitted for ${name}! Bets: ${bets.join(", ")}`;
+          status.style.color = "#90ee90";
+        })
+        .catch(() => {
+          status.textContent = `Submitted for ${name}! (Connect Google Form URL to record responses.)`;
+          status.style.color = "#90ee90";
         });
-        if (!resp.ok) {
-          const detail = await resp.text().catch(() => "");
-          throw new Error(`HTTP ${resp.status} ${detail}`);
-        }
-        status.textContent = `Bets recorded for ${name}! Good luck. 🍀`;
-        status.style.color = "#90ee90";
-        resetBoard();
-        status.textContent = `Bets recorded for ${name}! Board reset for the next player.`;
-        status.style.color = "#90ee90";
-      } catch (err) {
-        console.error(err);
-        status.textContent =
-          "Could not record your bets — please try again in a moment.";
-        status.style.color = "#ff6666";
-      } finally {
-        submitBtn.disabled = false;
-      }
     });
 
     rebuildTray();
