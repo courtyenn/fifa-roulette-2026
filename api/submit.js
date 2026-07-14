@@ -1,40 +1,9 @@
-const { google } = require("googleapis");
-
-// Human-readable names for each bet group used on the board.
-const GROUP_LABELS = {
-  ftts: "First Team to Score",
-  special: "Match Ends In",
-  matrix: "Time of First Goal",
-  goals: "Total Official Goals",
-  winner: "2026 FIFA World Cup Champion",
-};
-
-function formatBets(bets) {
-  return bets
-    .map((b) => {
-      const label = GROUP_LABELS[b.group] || b.group;
-      return `${label}: ${b.value} (x${b.chips})`;
-    })
-    .join("; ");
-}
-
-function getSheetsClient() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  // Vercel stores the multi-line private key with literal "\n"; restore real newlines.
-  const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
-
-  if (!email || !key || !process.env.GOOGLE_SHEET_ID) {
-    throw new Error("missing_google_env");
-  }
-
-  const auth = new google.auth.JWT({
-    email,
-    key,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-
-  return google.sheets({ version: "v4", auth });
-}
+// Proxies a validated submission to a Google Apps Script Web App, which appends
+// a row to the bound Google Sheet. This avoids needing a Google Cloud service
+// account — the Apps Script is created from inside the Sheet itself.
+//
+// Set APPS_SCRIPT_URL in the environment to your deployed web app URL
+// (ends in /exec). See README.md for how to create it.
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -42,50 +11,45 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
+  const url = process.env.APPS_SCRIPT_URL;
+  if (!url) {
+    return res.status(500).json({ error: "server_not_configured" });
+  }
+
   try {
-    // Vercel parses JSON bodies automatically, but guard for string bodies too.
-    const body =
+    const parsed =
       typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
 
-    const name = (body.name || "").toString().trim();
-    const bets = Array.isArray(body.bets) ? body.bets : [];
+    const name = (parsed.name || "").toString().trim();
+    const bets = Array.isArray(parsed.bets) ? parsed.bets : [];
 
     if (!name) return res.status(400).json({ error: "name_required" });
-    if (bets.length === 0)
-      return res.status(400).json({ error: "no_bets" });
+    if (bets.length === 0) return res.status(400).json({ error: "no_bets" });
 
-    const totalChips = bets.reduce(
-      (sum, b) => sum + (Number(b.chips) || 0),
-      0,
-    );
-
-    const timestamp = new Date().toISOString();
-
-    const sheets = getSheetsClient();
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: "Sheet1!A:E",
-      valueInputOption: "USER_ENTERED",
-      insertDataOption: "INSERT_ROWS",
-      requestBody: {
-        values: [
-          [
-            timestamp,
-            name,
-            totalChips,
-            formatBets(bets),
-            JSON.stringify(bets),
-          ],
-        ],
-      },
+    // Forward server-to-server (no CORS involved here).
+    const upstream = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, bets }),
+      redirect: "follow",
     });
+
+    const text = await upstream.text();
+    let json = null;
+    try {
+      json = JSON.parse(text);
+    } catch (_) {
+      /* Apps Script returned non-JSON — treat as failure below */
+    }
+
+    if (!upstream.ok || !json || json.error) {
+      console.error("apps script rejected submission:", upstream.status, text);
+      return res.status(502).json({ error: "record_failed" });
+    }
 
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("submit error:", err);
-    if (err && err.message === "missing_google_env") {
-      return res.status(500).json({ error: "server_not_configured" });
-    }
     return res.status(500).json({ error: "record_failed" });
   }
 };
