@@ -1,0 +1,9 @@
+{
+  "name": "roulette-fifa-betting-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FIFA World Cup roulette-style betting form. Static form on Vercel, submissions recorded to a Google Sheet via a serverless function.",
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}

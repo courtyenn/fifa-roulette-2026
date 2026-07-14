@@ -1,0 +1,836 @@
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  #app {
+    background: #1a4a1a;
+    min-height: 700px;
+    padding: 16px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+  #table-border {
+    background: #0d2e0d;
+    border-radius: 10px;
+    padding: 12px;
+    border: 3px solid #c9a84c;
+  }
+  .section-header {
+    color: #f0d060;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .section-label {
+    color: #f0d060;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  #table-with-labels {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .side-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f0d060;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: 18px;
+  }
+  .side-label span {
+    display: block;
+  }
+  .side-label.left span {
+    transform: rotate(-90deg);
+  }
+  .side-label.right span {
+    transform: rotate(90deg);
+  }
+  #layout-wrap {
+    display: grid;
+    flex: 1;
+    grid-template-areas:
+      ". top-bar ."
+      "left-bar matrix right-bar"
+      ". bot-label ."
+      ". bot-bar .";
+    grid-template-columns: 56px 1fr 72px;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 3px;
+  }
+  #bot-label {
+    grid-area: bot-label;
+    color: #f0d060;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-align: center;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  #top-bar {
+    grid-area: top-bar;
+    display: flex;
+    gap: 3px;
+  }
+  #left-bar {
+    grid-area: left-bar;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  #right-bar {
+    grid-area: right-bar;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  #bot-bar {
+    grid-area: bot-bar;
+    display: flex;
+    gap: 3px;
+  }
+  #matrix {
+    grid-area: matrix;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .cell {
+    border: 1.5px solid #c9a84c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    user-select: none;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cell:hover {
+    border-color: #ffe066;
+  }
+
+  .matrix-cell {
+    height: 60px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+  }
+  .matrix-cell:nth-child(odd) {
+    background: #8b0000;
+  }
+  .matrix-cell:nth-child(even) {
+    background: #1a1a1a;
+  }
+
+  .top-cell {
+    flex: 1;
+    height: 38px;
+    background: #2a6a2a;
+    color: #f0d060;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .left-cell {
+    flex: 1;
+    background: #1e5c1e;
+    color: #f0d060;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 0;
+  }
+  .right-cell {
+    flex: 1;
+    background: #2a2a8a;
+    color: #f0d060;
+    font-size: 11px;
+    font-weight: 500;
+    min-height: 0;
+  }
+  .bot-cell {
+    flex: 1;
+    height: 58px;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .england-flag {
+    background-image: url("england_flag.jpg");
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+  }
+
+  .france-flag {
+    background-image: url("france_flag.jpeg");
+    background-size: cover;
+    background-position: center;
+    color: #000;
+  }
+
+  .bot-cell:first-child {
+    background-image: url("spain_flag.jpg");
+    background-size: cover;
+    background-position: center;
+    color: #000;
+  }
+  .bot-cell:last-child {
+    background-image: url("argentina_flag.jpg");
+    background-size: cover;
+    background-position: center;
+    color: #000;
+  }
+
+  .cell.drop-target {
+    border: 2px dashed #ffe066;
+    background: rgba(255, 224, 102, 0.08) !important;
+  }
+
+  .cell-label {
+    font-size: inherit;
+    pointer-events: none;
+  }
+  .chip-count-badge {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    background-image: url("./chip.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    display: none;
+  }
+  .remove-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(200, 0, 0, 0.75);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: 9px;
+    padding: 1px 4px;
+    cursor: pointer;
+    display: none;
+    line-height: 1.4;
+  }
+  .remove-btn:hover {
+    background: #c00;
+  }
+
+  #chips-tray {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+    padding: 10px 10px 8px;
+    background: #0d2e0d;
+    border-radius: 8px;
+    border: 1.5px solid #c9a84c;
+    flex-wrap: wrap;
+    min-height: 52px;
+    position: relative;
+  }
+  .tray-label {
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #c9a84c;
+    letter-spacing: 0.5px;
+  }
+
+  .chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-image: url("./chip.png");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .chip:active {
+    cursor: grabbing;
+  }
+  .chip.dragging-ghost {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .chip-fly {
+    position: absolute;
+    z-index: 50;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    background-image: url("./chip.png");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+  }
+
+  #form-bottom {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  #name-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: #0d2e0d;
+    border: 1.5px solid #c9a84c;
+    color: #f0d060;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+  #name-input::placeholder {
+    color: #6a8a4a;
+  }
+  #name-input:focus {
+    border-color: #ffe066;
+  }
+  #submit-btn {
+    padding: 8px 18px;
+    background: #c9a84c;
+    color: #0d2e0d;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  #submit-btn:hover {
+    background: #ffe066;
+  }
+  #status-bar {
+    text-align: center;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #f0d060;
+    min-height: 16px;
+  }
+  #chips-left-display {
+    text-align: center;
+    font-size: 11px;
+    color: #c9a84c;
+    margin-top: 4px;
+  }
+</style>
+
+<h2
+  style="
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  "
+>
+  Roulette betting form — drag poker chips onto bet zones, remove to reallocate,
+  then submit.
+</h2>
+
+<div id="app">
+  <div id="table-border">
+    <div
+      class="section-label"
+      style="
+        font-size: 22px;
+        margin-bottom: 16px;
+        margin-top: 16px;
+        color: #f0d060;
+      "
+    >
+      Place your bets
+    </div>
+    <p class="section-label" style="font-size: 12px; margin-bottom: 8px"></p>
+    <p class="section-header">Instructions:</p>
+
+    <p class="section-label">
+      0 = Player vomits on pitch<br />
+      00 = Goalkeeper scores <br />
+      Middle tiles: Time for first goal, in 5 minute increments <br />
+    </p>
+
+    <div id="table-with-labels" style="margin-top: 16px; margin-bottom: 32px">
+      <div class="side-label left"><span>First Team to Score</span></div>
+      <div id="layout-wrap">
+        <div id="top-bar">
+          <div
+            class="cell top-cell"
+            data-group="special"
+            data-val="0"
+            data-chip-count="0"
+            id="top0"
+          >
+            <span class="cell-label">0</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell top-cell"
+            data-group="special"
+            data-val="00"
+            data-chip-count="0"
+            id="top00"
+          >
+            <span class="cell-label">00</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+        </div>
+
+        <div id="left-bar">
+          <div
+            class="cell left-cell"
+            data-group="ftts"
+            data-val="Home"
+            data-chip-count="0"
+            id="leftHome"
+          >
+            <span class="cell-label">Home</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell left-cell"
+            data-group="ftts"
+            data-val="Away"
+            data-chip-count="0"
+            id="leftAway"
+          >
+            <span class="cell-label">Away</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+        </div>
+
+        <div id="matrix"></div>
+
+        <div id="right-bar">
+          <div
+            class="cell right-cell"
+            data-group="goals"
+            data-val="1"
+            data-chip-count="0"
+            id="right1"
+          >
+            <span class="cell-label">1</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell right-cell"
+            data-group="goals"
+            data-val="2"
+            data-chip-count="0"
+            id="right2"
+          >
+            <span class="cell-label">2</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell right-cell"
+            data-group="goals"
+            data-val="3"
+            data-chip-count="0"
+            id="right3"
+          >
+            <span class="cell-label">3</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell right-cell"
+            data-group="goals"
+            data-val="4"
+            data-chip-count="0"
+            id="right4"
+          >
+            <span class="cell-label">4</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell right-cell"
+            data-group="goals"
+            data-val="5"
+            data-chip-count="0"
+            id="right5"
+          >
+            <span class="cell-label">5</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+        </div>
+
+        <div id="bot-label">2026 FIFA World Cup Champion</div>
+
+        <div id="bot-bar">
+          <div
+            class="cell bot-cell"
+            data-group="winner"
+            data-val="England"
+            data-chip-count="0"
+            id="botUSA"
+          >
+            <span class="cell-label">Spain</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell bot-cell"
+            data-group="winner"
+            data-val="FRANCE"
+            data-chip-count="0"
+            id="botFRANCE"
+          >
+            <span class="cell-label">Argentina</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+        </div>
+      </div>
+      <div class="side-label right">
+        <span>Total Official Goals Scored</span>
+      </div>
+    </div>
+
+    <div style="position: relative; margin-top: 14px">
+      <div class="tray-label">drag a chip onto the table to bet</div>
+      <div id="chips-tray"></div>
+    </div>
+    <div id="chips-left-display">7 chips available</div>
+
+    <div id="form-bottom">
+      <input
+        id="name-input"
+        type="text"
+        placeholder="Full name"
+        autocomplete="off"
+      />
+      <button id="submit-btn">Submit</button>
+    </div>
+    <div id="status-bar"></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const TOTAL_CHIPS = 7;
+    const CHIP_COLOR = "#c9281e";
+
+    let chipsPlaced = 0;
+    let dragging = false;
+    let dragEl = null;
+    let dragOffX = 0,
+      dragOffY = 0;
+    let ghostChip = null;
+
+    const appEl = document.getElementById("app");
+    const trayEl = document.getElementById("chips-tray");
+
+    const matrixEl = document.getElementById("matrix");
+    const matrixVals = [
+      "0–5'",
+      "6–10'",
+      "11–15'",
+      "16–20'",
+      "21–25'",
+      "26–30'",
+      "31–35'",
+      "36–40'",
+      "41–45'",
+      "46–50'",
+      "51–55'",
+      "56–60'",
+      "61–65'",
+      "66–70'",
+      "71–75'",
+      "76–80'",
+      "81–85'",
+      "86–90'",
+    ];
+    matrixVals.forEach((val, idx) => {
+      const div = document.createElement("div");
+      div.className = "cell matrix-cell";
+      div.dataset.group = "matrix";
+      div.dataset.val = val;
+      div.dataset.chipCount = "0";
+      div.id = "mat" + (idx + 1);
+      div.innerHTML = `<span class="cell-label">${val}</span><div class="chip-count-badge"></div><button class="remove-btn">-1</button>`;
+      matrixEl.appendChild(div);
+    });
+
+    function makeChipEl(inTray) {
+      const c = document.createElement("div");
+      c.className = "chip";
+      // c.style.background = CHIP_COLOR;
+      c.textContent = "●";
+      if (inTray) {
+        c.addEventListener("mousedown", onChipMouseDown);
+        c.addEventListener("touchstart", onChipTouchStart, { passive: false });
+      }
+      return c;
+    }
+
+    function rebuildTray() {
+      trayEl.innerHTML = "";
+      const avail = TOTAL_CHIPS - chipsPlaced;
+      for (let i = 0; i < avail; i++) {
+        trayEl.appendChild(makeChipEl(true));
+      }
+      document.getElementById("chips-left-display").textContent =
+        avail === 0
+          ? "No chips left — remove one to reallocate"
+          : avail === 1
+            ? "1 chip remaining"
+            : `${avail} chips remaining`;
+    }
+
+    function getCellCount(cellEl) {
+      return parseInt(cellEl.dataset.chipCount || "0", 10);
+    }
+
+    function setCellCount(cellEl, n) {
+      cellEl.dataset.chipCount = String(n);
+      const badge = cellEl.querySelector(".chip-count-badge");
+      const removeBtn = cellEl.querySelector(".remove-btn");
+      if (n > 0) {
+        badge.style.display = "flex";
+        badge.textContent = n;
+        removeBtn.style.display = "block";
+        cellEl.style.outline = "2px solid #ffd700";
+        cellEl.style.outlineOffset = "-2px";
+      } else {
+        badge.style.display = "none";
+        removeBtn.style.display = "none";
+        cellEl.style.outline = "";
+      }
+    }
+
+    function addChipToCell(cellEl) {
+      if (chipsPlaced >= TOTAL_CHIPS) return false;
+      const n = getCellCount(cellEl);
+      setCellCount(cellEl, n + 1);
+      chipsPlaced++;
+      rebuildTray();
+      updateStatus();
+      return true;
+    }
+
+    function removeChipFromCell(cellEl) {
+      const n = getCellCount(cellEl);
+      if (n <= 0) return;
+      setCellCount(cellEl, n - 1);
+      chipsPlaced--;
+      rebuildTray();
+      updateStatus();
+    }
+
+    document.querySelectorAll(".remove-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        removeChipFromCell(btn.closest(".cell"));
+      });
+    });
+
+    function getAppOffset() {
+      return appEl.getBoundingClientRect();
+    }
+
+    function startDrag(clientX, clientY, sourceEl) {
+      if (chipsPlaced >= TOTAL_CHIPS) return;
+      dragging = true;
+      const appRect = getAppOffset();
+      const srcRect = sourceEl.getBoundingClientRect();
+      dragOffX = clientX - srcRect.left;
+      dragOffY = clientY - srcRect.top;
+
+      ghostChip = document.createElement("div");
+      ghostChip.className = "chip-fly";
+      // ghostChip.style.background = CHIP_COLOR;
+      ghostChip.textContent = "●";
+      ghostChip.style.left = srcRect.left - appRect.left + "px";
+      ghostChip.style.top = srcRect.top - appRect.top + "px";
+      ghostChip.style.cursor = "grabbing";
+      appEl.appendChild(ghostChip);
+
+      sourceEl.classList.add("dragging-ghost");
+      dragEl = sourceEl;
+    }
+
+    function onChipMouseDown(e) {
+      e.preventDefault();
+      startDrag(e.clientX, e.clientY, e.currentTarget);
+    }
+    function onChipTouchStart(e) {
+      e.preventDefault();
+      startDrag(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget);
+    }
+
+    function moveFly(clientX, clientY) {
+      if (!dragging || !ghostChip) return;
+      const appRect = getAppOffset();
+      ghostChip.style.left = clientX - appRect.left - dragOffX + "px";
+      ghostChip.style.top = clientY - appRect.top - dragOffY + "px";
+      document
+        .querySelectorAll(".cell")
+        .forEach((c) => c.classList.remove("drop-target"));
+      const hit = cellAtPoint(clientX, clientY);
+      if (hit) hit.classList.add("drop-target");
+    }
+
+    function cellAtPoint(cx, cy) {
+      const els = document.elementsFromPoint(cx, cy);
+      for (const el of els) {
+        if (el.classList.contains("cell")) return el;
+        if (el.closest && el.closest(".cell")) return el.closest(".cell");
+      }
+      return null;
+    }
+
+    function endDragAt(clientX, clientY) {
+      if (!dragging) return;
+      dragging = false;
+      document
+        .querySelectorAll(".cell")
+        .forEach((c) => c.classList.remove("drop-target"));
+      if (ghostChip) {
+        ghostChip.remove();
+        ghostChip = null;
+      }
+      if (dragEl) {
+        dragEl.classList.remove("dragging-ghost");
+        dragEl = null;
+      }
+
+      const hit = cellAtPoint(clientX, clientY);
+      if (hit) {
+        addChipToCell(hit);
+      }
+    }
+
+    document.addEventListener("mousemove", (e) =>
+      moveFly(e.clientX, e.clientY),
+    );
+    document.addEventListener(
+      "touchmove",
+      (e) => {
+        moveFly(e.touches[0].clientX, e.touches[0].clientY);
+      },
+      { passive: false },
+    );
+    document.addEventListener("mouseup", (e) =>
+      endDragAt(e.clientX, e.clientY),
+    );
+    document.addEventListener("touchend", (e) => {
+      endDragAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    });
+
+    function updateStatus() {
+      const status = document.getElementById("status-bar");
+      const avail = TOTAL_CHIPS - chipsPlaced;
+      if (avail > 0) {
+        status.textContent = "";
+      } else {
+        status.textContent =
+          "All chips placed. Enter your name and submit, or remove chips to reallocate.";
+        status.style.color = "#90ee90";
+      }
+    }
+
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      const name = document.getElementById("name-input").value.trim();
+      const status = document.getElementById("status-bar");
+      if (!name) {
+        status.textContent = "Enter your full name to submit.";
+        status.style.color = "#ff6666";
+        return;
+      }
+      if (chipsPlaced === 0) {
+        status.textContent = "Place at least one chip before submitting.";
+        status.style.color = "#ff6666";
+        return;
+      }
+
+      const bets = [];
+      document.querySelectorAll(".cell").forEach((c) => {
+        const n = getCellCount(c);
+        if (n > 0) bets.push(`${c.dataset.group}:${c.dataset.val}x${n}`);
+      });
+
+      const params = new URLSearchParams({
+        "entry.name": name,
+        "entry.bets": bets.join("|"),
+      });
+      const FORM_URL =
+        "https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse";
+      fetch(FORM_URL + "?" + params.toString(), {
+        method: "POST",
+        mode: "no-cors",
+      })
+        .then(() => {
+          status.textContent = `Submitted for ${name}! Bets: ${bets.join(", ")}`;
+          status.style.color = "#90ee90";
+        })
+        .catch(() => {
+          status.textContent = `Submitted for ${name}! (Connect Google Form URL to record responses.)`;
+          status.style.color = "#90ee90";
+        });
+    });
+
+    rebuildTray();
+    updateStatus();
+  })();
+</script>
