@@ -105,7 +105,8 @@
   }
   #bot-bar {
     grid-area: bot-bar;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 3px;
   }
   #matrix {
@@ -188,13 +189,13 @@
     color: #000;
   }
 
-  .bot-cell:first-child {
+  .spain-flag {
     background-image: url("spain_flag.jpg");
     background-size: cover;
     background-position: center;
     color: #000;
   }
-  .bot-cell:last-child {
+  .argentina-flag {
     background-image: url("argentina_flag.jpg");
     background-size: cover;
     background-position: center;
@@ -589,24 +590,46 @@
 
         <div id="bot-bar">
           <div
-            class="cell bot-cell"
+            class="cell bot-cell spain-flag"
             data-group="winner"
-            data-val="England"
+            data-val="SPAIN"
             data-chip-count="0"
-            id="botUSA"
+            id="botSPAIN"
           >
             <span class="cell-label">Spain</span>
             <div class="chip-count-badge"></div>
             <button class="remove-btn">-1</button>
           </div>
           <div
-            class="cell bot-cell"
+            class="cell bot-cell argentina-flag"
+            data-group="winner"
+            data-val="ARGENTINA"
+            data-chip-count="0"
+            id="botARGENTINA"
+          >
+            <span class="cell-label">Argentina</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell bot-cell england-flag"
+            data-group="winner"
+            data-val="ENGLAND"
+            data-chip-count="0"
+            id="botENGLAND"
+          >
+            <span class="cell-label">England</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell bot-cell france-flag"
             data-group="winner"
             data-val="FRANCE"
             data-chip-count="0"
             id="botFRANCE"
           >
-            <span class="cell-label">Argentina</span>
+            <span class="cell-label">France</span>
             <div class="chip-count-badge"></div>
             <button class="remove-btn">-1</button>
           </div>
@@ -654,15 +677,33 @@
 
       <div class="divider"></div>
 
-      <div class="section-title">Coin flips</div>
+      <div class="section-title">Coin flip</div>
       <table>
         <tr>
           <td class="label">First to score</td>
           <td class="odds">2×</td>
         </tr>
+      </table>
+
+      <div class="divider"></div>
+
+      <div class="section-title">Tournament winner</div>
+      <table>
         <tr>
-          <td class="label">Tournament winner</td>
-          <td class="odds">2×</td>
+          <td class="label">Spain</td>
+          <td class="odds">4×</td>
+        </tr>
+        <tr>
+          <td class="label">Argentina</td>
+          <td class="odds">4×</td>
+        </tr>
+        <tr>
+          <td class="label">England</td>
+          <td class="odds">4×</td>
+        </tr>
+        <tr>
+          <td class="label">France</td>
+          <td class="odds">4×</td>
         </tr>
       </table>
 
