@@ -467,10 +467,17 @@
       ><br />
 
       Drag poker chips from the tray onto the table to place bets. Everyone has
-      7 chips to allocate. Remove chips to reallocate. <br /><br /><br />0 =
-      Player vomits on pitch<br />
+      7 chips to allocate. Remove chips to reallocate. Multiple bets can be
+      placed on a tile.<br /><br /><br />0 = Player vomits on pitch<br />
       00 = Goalkeeper scores <br />
+      000 = No goal made within first 90 minutes <br />
       Middle tiles: Time to first goal, in 5 minute increments <br />
+      Left column: First team to score. Home is officially SPAIN. Away has not
+      been determined.
+      <br />
+      Right column: Total goals scored in the match. Does not include goals that
+      are reversed.<br />
+      Bottom row: 2026 FIFA World Cup Champion. <br />
     </p>
 
     <div id="table-with-labels" style="margin-top: 16px; margin-bottom: 32px">
@@ -496,6 +503,17 @@
             id="top00"
           >
             <span class="cell-label">00</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
+          <div
+            class="cell top-cell"
+            data-group="special"
+            data-val="000"
+            data-chip-count="0"
+            id="top000"
+          >
+            <span class="cell-label">000</span>
             <div class="chip-count-badge"></div>
             <button class="remove-btn">-1</button>
           </div>
@@ -584,6 +602,17 @@
             <div class="chip-count-badge"></div>
             <button class="remove-btn">-1</button>
           </div>
+          <div
+            class="cell right-cell"
+            data-group="goals"
+            data-val="6+"
+            data-chip-count="0"
+            id="right6"
+          >
+            <span class="cell-label">6+</span>
+            <div class="chip-count-badge"></div>
+            <button class="remove-btn">-1</button>
+          </div>
         </div>
 
         <div id="bot-label">2026 FIFA World Cup Champion</div>
@@ -661,6 +690,12 @@
             00 &nbsp;<span class="dim">— keeper scores</span>
           </td>
           <td class="odds">100×</td>
+        </tr>
+        <tr>
+          <td class="label">
+            000 &nbsp;<span class="dim">— no goal in 90'</span>
+          </td>
+          <td class="odds">12×</td>
         </tr>
       </table>
 
@@ -753,6 +788,10 @@
         <tr>
           <td class="label">5</td>
           <td class="odds">8×</td>
+        </tr>
+        <tr>
+          <td class="label">6+ &nbsp;<span class="dim">goal fest</span></td>
+          <td class="odds">10×</td>
         </tr>
       </table>
 
